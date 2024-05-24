@@ -11,9 +11,14 @@ int P_1;
 int P_2;
 int P_3;
 // Se identifican los servos a usar
-Servo S1;
-Servo S2;
-Servo S3;
+Servo S1; // Garra
+Servo S2; // Medio
+Servo S3; // Abajo
+// Se configura la pantalla LCD
+#define I2C_ADDR    0x27
+#define LCD_COLUMNS 16
+#define LCD_LINES   2
+LiquidCrystal_I2C lcd(I2C_ADDR, LCD_COLUMNS, LCD_LINES);
 
 void setup() {
   // Se definen las entradas
@@ -24,6 +29,8 @@ void setup() {
   S1.attach(9);
   S2.attach(10);
   S3.attach(11);
+  lcd.init(); //inicia la pantalla
+  lcd.backlight(); //enciende la luz
 }
 
 void loop() {
@@ -35,6 +42,13 @@ void loop() {
   P_1 = map(P_1, 0, 1023, 0, 179);
   P_2 = map(P_2, 0, 1023, 0, 179);
   P_3 = map(P_3, 0, 1023, 0, 179);
+  // Se muestra el valor de P_X en la pantalla LCD. 
+  lcd.setCursor(0,0); // Servo 1
+  lcd.print("S1: ")+lcd.print(P_1)+lcd.print(" ");
+  //lcd.setCursor(8,0); // Servo 2
+  lcd.print("S2: ")+lcd.print(P_2)+lcd.print("   ");
+  lcd.setCursor(0,1); // Servo 3
+  lcd.print("S3: ")+lcd.print(P_3)+lcd.print("   ");
   // Se colocan los servos en la posición indicada
   S1.write(P_1);
   S2.write(P_2);
