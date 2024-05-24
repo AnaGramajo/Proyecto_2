@@ -1,0 +1,43 @@
+#include <stdint.h> 
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h> 
+
+// Se definen los pines en los que se conectan los potenciómetros
+#define P1 A1
+#define P2 A2
+#define P3 A3
+// Se definen las variables que guardan el valor de los potenciómetros
+int P_1;
+int P_2;
+int P_3;
+// Se identifican los servos a usar
+Servo S1;
+Servo S2;
+Servo S3;
+
+void setup() {
+  // Se definen las entradas
+  pinMode(P1,INPUT); 
+  pinMode(P2,INPUT); 
+  pinMode(P3,INPUT); 
+  // Se define en qué pin se conecta cada servo
+  S1.attach(9);
+  S2.attach(10);
+  S3.attach(11);
+}
+
+void loop() {
+  // Se lee el valor de los potenciómetros
+  P_1 = analogRead(P1);
+  P_2 = analogRead(P2);
+  P_3 = analogRead(P3);
+  // Se escalan para obtener valores de 0 a 180 en el servo
+  P_1 = map(P_1, 0, 1023, 0, 179);
+  P_2 = map(P_2, 0, 1023, 0, 179);
+  P_3 = map(P_3, 0, 1023, 0, 179);
+  // Se colocan los servos en la posición indicada
+  S1.write(P_1);
+  S2.write(P_2);
+  S3.write(P_3);
+  delay(100);
+}
