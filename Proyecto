@@ -19,6 +19,39 @@ Servo S3; // Abajo
 #define LCD_COLUMNS 16
 #define LCD_LINES   2
 LiquidCrystal_I2C lcd(I2C_ADDR, LCD_COLUMNS, LCD_LINES);
+// identifica boton
+int boton = 3; 
+// identificar mode
+int mode = 0;
+
+// Guardar posicion EEPROM_1
+void savePosition(int pos){
+  int address = pos*6;
+  EEPROM.write(address, SP1);
+  EEPROM.write(address + 2, SP2);
+  EEPROM.write(address + 4, SP3);
+}
+// Leer posición EEPROM_1
+void readPosition (int pos){
+  int address = pos*6;
+  SP1 = EEPROM.write(address)
+  SP2 = EEPROM.write(address + 2)
+  SP3 = EEPROM.write(address + 4)
+
+  S1.write(SP1);
+  S2.write(SP2);
+  S3.write(SP3);
+}
+// potenciometro o con EEPROM
+void changeMode(){
+  mode = !mode;
+  if (mode == 0){
+    lcd.setCursor(0,0);
+    lcd.print("EEPROM");
+  } else {
+    lcd.print("Potenciometro");
+  }
+}
 
 void setup() {
   // Se definen las entradas
@@ -34,6 +67,11 @@ void setup() {
 }
 
 void loop() {
+  // leer boton
+  if (digitalRead(boton) == 0){
+    delay(200);
+    changeMode();
+  }
   // Se lee el valor de los potenciómetros
   P_1 = analogRead(P1);
   P_2 = analogRead(P2);
