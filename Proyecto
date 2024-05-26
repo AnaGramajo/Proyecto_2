@@ -1,10 +1,9 @@
+// Arduino que recibe 
+
 #include <stdint.h> 
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h> 
 
-// Se definen los pines en los que se conectan los potenciómetros
-#define P1 A1
-#define P2 A2
 // Se definen las variables que guardan el valor de los potenciómetros
 int P_1;
 int P_2;
@@ -94,9 +93,6 @@ void changeMode(){
 }
 
 void setup() {
-  // Se definen las entradas
-  pinMode(P1,INPUT); 
-  pinMode(P2,INPUT); 
   // Se define en qué pin se conecta cada servo
   S1.attach(9);
   S2.attach(10);
@@ -144,18 +140,29 @@ void loop() {
     delay(200);
     changeMode();
   }
-  // Se muestra el valor de P_X en la pantalla LCD. 
-  lcd.setCursor(0,0); // Servo 1
-  lcd.print("S1: ")+lcd.print(P_1)+lcd.print(" ");
-  //lcd.setCursor(0,1); // Servo 2
-  lcd.print("S2: ")+lcd.print(P_2)+lcd.print("   ");
-  // Se colocan los servos en la posición indicada
-  S1.write(P_1);
-  S2.write(P_2);
-  delay(100);
+  // Proceso si se elige el potenciómetro
+  // Verifica si hay datos disponibles para leer
+  if (Serial.available()) {
+  // Lee el mensaje hasta encontrar una coma
+  String data = Serial.readStringUntil('\n');
+  int commaIndex = data.indexOf(',');
+  if (commaIndex > 0) {
+    // guarda una cadena desde la posición 0 hasta la coma y la convierte a un valor entero
+    P_1 = data.substring(0, commaIndex).toInt();
+    // guarda una cadena desde la posición después de la coma hasta el final y la convierte a un valor entero
+    P_2 = data.substring(commaIndex + 1).toInt();
+    // Se colocan los servos en la posición indicada
+    S1.write(P_1);
+    S2.write(P_2);
+    // Se muestra el valor de P_X en la pantalla LCD. 
+    lcd.setCursor(0,0); // Servo 1
+    lcd.print("S1: ")+lcd.print(P_1)+lcd.print(" ");
+    //lcd.setCursor(0,1); // Servo 2
+    lcd.print("S2: ")+lcd.print(P_2)+lcd.print("   ");
+    }
+  }
+  delay(1);
 }
-
-
 
 
 
@@ -163,10 +170,12 @@ void loop() {
 
 const int P1 = A1; // Pin del primer potenciómetro
 const int P2 = A2; // Pin del segundo potenciómetro
+// Se definen las variables que guardan el valor de los potenciómetros
 int P_1 = 0;
 int P_2 = 0;
 
 void setup(){
+  // Se definen las entradas
   pinMode(P1,INPUT); 
   pinMode(P2,INPUT); 
   Serial.begin(9600);
@@ -174,11 +183,13 @@ void setup(){
 
 void loop()
 {
-  P_1 = analogRead(P1); // Leer y escalar el valor del potenciómetro
-  P_2 = analogRead(P2); // Leer y escalar el valor del potenciómetr
+  // Se lee el valor de los potenciómetros
+  P_1 = analogRead(P1); 
+  P_2 = analogRead(P2);
+  // Se escalan para obtener valores de 0 a 180 en el servo
   P_1 = map(P_1, 0, 1023, 0, 179);
   P_2 = map(P_2, 0, 1023, 0, 179);
-  
+  // Se manda el mensaje en la forma P_1,P_2
   Serial.print(P_1);
   Serial.print(",");
   Serial.println(P_2);
