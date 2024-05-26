@@ -25,6 +25,10 @@ int boton = 3;
 int mode = 0;
 //número máximo de posiciones para guardar
 const int maxPositions = 10;
+// Variables para almacenar posiciones de los servos
+int SP1 = 0;
+int SP2 = 0;
+int SP3 =0;
 
 // Estructura para almacenar las posiciones de los servos
 struct ServoPositions {
@@ -43,7 +47,7 @@ ServoPositions predefinedPositions[maxPositions] = {
   {90, 45, 135}
 }
 
-// Guardar posicion EEPROM_1
+// Guardar posicion EEPROM
 void savePosition(int pos, ServoPositions positions) {
   int address = pos * sizeof(ServoPositions);
   EEPROM.put(address, positions);
@@ -51,25 +55,50 @@ void savePosition(int pos, ServoPositions positions) {
   Serial.println(pos);
 }
 
-// Leer posición EEPROM_1
-void readPosition (int pos){
-  int address = pos*6;
-  SP1 = EEPROM.write(address)
-  SP2 = EEPROM.write(address + 2)
-  SP3 = EEPROM.write(address + 4)
+// Leer posición EEPROM
+bool readPosition(int pos) {
+  int address = pos * sizeof(ServoPositions);
+  ServoPositions positions;
+  EEPROM.get(address, positions);
+}
+
+// Verificar si los son validos
+if (positions.S1 >=0 && positions.S1 <=180 &&
+    positions.S2 >=0 && positions.S2 <=180 &&
+    positions.S3 >=0 && positions.S3 <=180 ){
+  SP1 = positions.S1;
+  SP2 = positions.S2;
+  sp3 = positions.S3;
 
   S1.write(SP1);
   S2.write(SP2);
   S3.write(SP3);
+
+    Serial.print("Posición ");
+    Serial.println(pos);
+    Serial.print("Servo 1: ");
+    Serial.print(SP1);
+    Serial.print(" Servo 2: ");
+    Serial.print(SP2);
+    Serial.print(" Servo 3: ");
+    Serial.println(SP3);
+
+return true;
+  } else {
+    Serial.print("Dato invalido ");
+    Serial.println(pos);
+    return false;
+  }
 }
-// potenciometro o con EEPROM
+
+// Modo con potenciometro o EEPROM
 void changeMode(){
   mode = !mode;
   if (mode == 0){
     lcd.setCursor(0,0);
-    lcd.print("EEPROM");
+    lcd.print("EEPROM: ");
   } else {
-    lcd.print("Potenciometro");
+    lcd.print("Potenciometro: ");
   }
 }
 
@@ -84,6 +113,41 @@ void setup() {
   S3.attach(11);
   lcd.init(); //inicia la pantalla
   lcd.backlight(); //enciende la luz
+  // Inicializa la comunicación serial
+  Serial.begin(9600);
+// Configura el pin del botón como entrada
+  pinMode(boton, INPUT_PULLUP);
+
+  // Guarda las posiciones predefinidas en la EEPROM si no están ya guardadas
+  for (int i = 0; i < maxPositions; i++) {
+    ServoPositions positions;
+    int address = i * sizeof(ServoPositions);
+    EEPROM.get(address, positions);
+
+    // Compara con una posición no válida para verificar si es la primera vez que se guarda
+    if (positions.S1 < 0 || positions.S1 > 180 ||
+        positions.S2 < 0 || positions.S2 > 180 ||
+        positions.S3 < 0 || positions.S3 > 180) {
+      savePosition(i, predefinedPositions[i]);
+    }
+  }
+// Inicializa en modo EEPROM y carga posiciones
+  mode = 0;
+  lcd.clear();
+  lcd.print("Modo: EEPROM");
+  readPosition(0);
+  delay(800);
+  readPosition(1);
+  delay(800);
+  readPosition(2);
+  delay(800);
+  readPosition(3);
+  delay(800);
+  readPosition(4);
+  delay(800);
+  readPosition(5);
+  delay(800);
+}
 }
 
 void loop() {
