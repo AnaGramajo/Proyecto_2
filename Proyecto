@@ -5,20 +5,18 @@
 // Se definen los pines en los que se conectan los potenciómetros
 #define P1 A1
 #define P2 A2
-#define P3 A3
 // Se definen las variables que guardan el valor de los potenciómetros
 int P_1;
 int P_2;
-int P_3;
 // Se identifican los servos a usar
 Servo S1; // Garra
 Servo S2; // Medio
-Servo S3; // Abajo
 // Se configura la pantalla LCD
 #define I2C_ADDR    0x27
 #define LCD_COLUMNS 16
 #define LCD_LINES   2
 LiquidCrystal_I2C lcd(I2C_ADDR, LCD_COLUMNS, LCD_LINES);
+
 // identifica boton
 int boton = 3; 
 // estado del modo (0: EEPPROM, 1: potenciómetros)
@@ -28,23 +26,21 @@ const int maxPositions = 10;
 // Variables para almacenar posiciones de los servos
 int SP1 = 0;
 int SP2 = 0;
-int SP3 =0;
 
 // Estructura para almacenar las posiciones de los servos
 struct ServoPositions {
   int S1;
   int S2;
-  int S3;
 }
 
 // Posiciones predefinidas para los servos
 ServoPositions predefinedPositions[maxPositions] = {
-  {90, 90, 90},
-  {45, 45, 45},
-  {135, 135, 135},
-  {0, 0, 0},
-  {180, 180, 180},
-  {90, 45, 135}
+  {90, 90},
+  {45, 45},
+  {135, 135},
+  {0, 0},
+  {180, 180},
+  {90, 45}
 }
 
 // Guardar posicion EEPROM
@@ -64,15 +60,12 @@ bool readPosition(int pos) {
 
 // Verificar si los son validos
 if (positions.S1 >=0 && positions.S1 <=180 &&
-    positions.S2 >=0 && positions.S2 <=180 &&
-    positions.S3 >=0 && positions.S3 <=180 ){
+    positions.S2 >=0 && positions.S2 <=180){
   SP1 = positions.S1;
   SP2 = positions.S2;
-  sp3 = positions.S3;
 
   S1.write(SP1);
   S2.write(SP2);
-  S3.write(SP3);
 
     Serial.print("Posición ");
     Serial.println(pos);
@@ -80,8 +73,6 @@ if (positions.S1 >=0 && positions.S1 <=180 &&
     Serial.print(SP1);
     Serial.print(" Servo 2: ");
     Serial.print(SP2);
-    Serial.print(" Servo 3: ");
-    Serial.println(SP3);
 
 return true;
   } else {
@@ -106,16 +97,14 @@ void setup() {
   // Se definen las entradas
   pinMode(P1,INPUT); 
   pinMode(P2,INPUT); 
-  pinMode(P3,INPUT); 
   // Se define en qué pin se conecta cada servo
   S1.attach(9);
   S2.attach(10);
-  S3.attach(11);
   lcd.init(); //inicia la pantalla
   lcd.backlight(); //enciende la luz
   // Inicializa la comunicación serial
   Serial.begin(9600);
-// Configura el pin del botón como entrada
+  // Configura el pin del botón como entrada
   pinMode(boton, INPUT_PULLUP);
 
   // Guarda las posiciones predefinidas en la EEPROM si no están ya guardadas
@@ -126,8 +115,7 @@ void setup() {
 
     // Compara con una posición no válida para verificar si es la primera vez que se guarda
     if (positions.S1 < 0 || positions.S1 > 180 ||
-        positions.S2 < 0 || positions.S2 > 180 ||
-        positions.S3 < 0 || positions.S3 > 180) {
+        positions.S2 < 0 || positions.S2 > 180) {
       savePosition(i, predefinedPositions[i]);
     }
   }
@@ -159,21 +147,16 @@ void loop() {
   // Se lee el valor de los potenciómetros
   P_1 = analogRead(P1);
   P_2 = analogRead(P2);
-  P_3 = analogRead(P3);
   // Se escalan para obtener valores de 0 a 180 en el servo
   P_1 = map(P_1, 0, 1023, 0, 179);
   P_2 = map(P_2, 0, 1023, 0, 179);
-  P_3 = map(P_3, 0, 1023, 0, 179);
   // Se muestra el valor de P_X en la pantalla LCD. 
   lcd.setCursor(0,0); // Servo 1
   lcd.print("S1: ")+lcd.print(P_1)+lcd.print(" ");
-  //lcd.setCursor(8,0); // Servo 2
+  //lcd.setCursor(0,1); // Servo 2
   lcd.print("S2: ")+lcd.print(P_2)+lcd.print("   ");
-  lcd.setCursor(0,1); // Servo 3
-  lcd.print("S3: ")+lcd.print(P_3)+lcd.print("   ");
   // Se colocan los servos en la posición indicada
   S1.write(P_1);
   S2.write(P_2);
-  S3.write(P_3);
   delay(100);
 }
