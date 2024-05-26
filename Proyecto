@@ -144,12 +144,6 @@ void loop() {
     delay(200);
     changeMode();
   }
-  // Se lee el valor de los potenciómetros
-  P_1 = analogRead(P1);
-  P_2 = analogRead(P2);
-  // Se escalan para obtener valores de 0 a 180 en el servo
-  P_1 = map(P_1, 0, 1023, 0, 179);
-  P_2 = map(P_2, 0, 1023, 0, 179);
   // Se muestra el valor de P_X en la pantalla LCD. 
   lcd.setCursor(0,0); // Servo 1
   lcd.print("S1: ")+lcd.print(P_1)+lcd.print(" ");
@@ -158,5 +152,36 @@ void loop() {
   // Se colocan los servos en la posición indicada
   S1.write(P_1);
   S2.write(P_2);
+  delay(100);
+}
+
+
+
+
+
+// Arduino maestro 
+
+const int P1 = A1; // Pin del primer potenciómetro
+const int P2 = A2; // Pin del segundo potenciómetro
+int P_1 = 0;
+int P_2 = 0;
+
+void setup(){
+  pinMode(P1,INPUT); 
+  pinMode(P2,INPUT); 
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  P_1 = analogRead(P1); // Leer y escalar el valor del potenciómetro
+  P_2 = analogRead(P2); // Leer y escalar el valor del potenciómetr
+  P_1 = map(P_1, 0, 1023, 0, 179);
+  P_2 = map(P_2, 0, 1023, 0, 179);
+  
+  Serial.print(P_1);
+  Serial.print(",");
+  Serial.println(P_2);
+
   delay(100);
 }
