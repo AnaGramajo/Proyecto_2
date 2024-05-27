@@ -3,6 +3,7 @@
 #include <stdint.h> 
 #include <LiquidCrystal_I2C.h>
 #include <Servo.h> 
+#include <EEPROM.h>
 
 // Se definen las variables que guardan el valor de los potenciómetros
 int P_1;
