@@ -140,6 +140,22 @@ void loop() {
     delay(200);
     changeMode();
   }
+  if (mode == 0) {
+    // Modo EEPROM: carga la primera posición predefinida
+    readPosition(0);
+    delay(800);
+    readPosition(1);
+    delay(800);
+    readPosition(2);
+    delay(800);
+    readPosition(3);
+    delay(800);
+    readPosition(4);
+    delay(800);
+    readPosition(5);
+    delay(800);
+  } else {
+
   // Proceso si se elige el potenciómetro
   // Verifica si hay datos disponibles para leer
   if (Serial.available()) {
@@ -160,11 +176,10 @@ void loop() {
     //lcd.setCursor(0,1); // Servo 2
     lcd.print("S2: ")+lcd.print(P_2)+lcd.print("   ");
     }
+    }
   }
   delay(1);
 }
-
-
 
 // Arduino maestro 
 
