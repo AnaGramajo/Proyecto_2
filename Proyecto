@@ -8,21 +8,26 @@
 // Se definen las variables que guardan el valor de los potenciómetros
 int P_1;
 int P_2;
+
 // Se identifican los servos a usar
 Servo S1; // Garra
 Servo S2; // Medio
+
 // Se configura la pantalla LCD
 #define I2C_ADDR    0x27
 #define LCD_COLUMNS 16
 #define LCD_LINES   2
 LiquidCrystal_I2C lcd(I2C_ADDR, LCD_COLUMNS, LCD_LINES);
 
-// identifica boton
+// Posición actual de los servos
+int actual = 0;
+
+// identifica botón
 int boton = 3; 
-// estado del modo (0: EEPPROM, 1: potenciómetros)
-int mode = 0;
+
 //número máximo de posiciones para guardar
-const int maxPositions = 10;
+const int maxPositions = 5;
+
 // Variables para almacenar posiciones de los servos
 int SP1 = 0;
 int SP2 = 0;
@@ -35,17 +40,19 @@ struct ServoPositions {
 
 // Posiciones predefinidas para los servos
 ServoPositions predefinedPositions[maxPositions] = {
-  {90, 90},
-  {45, 45},
-  {135, 135},
-  {0, 0},
-  {180, 180},
-  {90, 45}
+  {45, 90},
+  {45, 180},
+  {135, 180},
+  {45, 180},
+  {45, 90}
 }
 
-// Guardar posicion EEPROM
+ServoPositions positions;
+int address;
+
+// Guardar posición EEPROM
 void savePosition(int pos, ServoPositions positions) {
-  int address = pos * sizeof(ServoPositions);
+  address = pos * sizeof(ServoPositions);
   EEPROM.put(address, positions);
   Serial.print("Saved position ");
   Serial.println(pos);
@@ -53,43 +60,31 @@ void savePosition(int pos, ServoPositions positions) {
 
 // Leer posición EEPROM
 bool readPosition(int pos) {
-  int address = pos * sizeof(ServoPositions);
-  ServoPositions positions;
+  address = pos * sizeof(ServoPositions);
   EEPROM.get(address, positions);
-}
-
-// Verificar si los son validos
-if (positions.S1 >=0 && positions.S1 <=180 &&
-    positions.S2 >=0 && positions.S2 <=180){
-  SP1 = positions.S1;
-  SP2 = positions.S2;
-
-  S1.write(SP1);
-  S2.write(SP2);
-
+  // Verificar si los son validos
+  if (positions.S1 >=0 && positions.S1 <=180 &&
+      positions.S2 >=0 && positions.S2 <=180){
+    SP1 = positions.S1;
+    SP2 = positions.S2;
+  
+    S1.write(SP1);
+    delay(500);
+    S2.write(SP2);
+    delay(500);
+  
     Serial.print("Posición ");
     Serial.println(pos);
     Serial.print("Servo 1: ");
     Serial.print(SP1);
     Serial.print(" Servo 2: ");
     Serial.print(SP2);
-
-return true;
+  
+  return true;
   } else {
     Serial.print("Dato invalido ");
     Serial.println(pos);
     return false;
-  }
-}
-
-// Modo con potenciometro o EEPROM
-void changeMode(){
-  mode = !mode;
-  if (mode == 0){
-    lcd.setCursor(0,0);
-    lcd.print("EEPROM: ");
-  } else {
-    lcd.print("Potenciometro: ");
   }
 }
 
@@ -106,8 +101,7 @@ void setup() {
 
   // Guarda las posiciones predefinidas en la EEPROM si no están ya guardadas
   for (int i = 0; i < maxPositions; i++) {
-    ServoPositions positions;
-    int address = i * sizeof(ServoPositions);
+    address = i * sizeof(ServoPositions);
     EEPROM.get(address, positions);
 
     // Compara con una posición no válida para verificar si es la primera vez que se guarda
@@ -116,67 +110,44 @@ void setup() {
       savePosition(i, predefinedPositions[i]);
     }
   }
-// Inicializa en modo EEPROM y carga posiciones
-  mode = 0;
-  lcd.clear();
-  lcd.print("Modo: EEPROM");
-  readPosition(0);
-  delay(800);
-  readPosition(1);
-  delay(800);
-  readPosition(2);
-  delay(800);
-  readPosition(3);
-  delay(800);
-  readPosition(4);
-  delay(800);
-  readPosition(5);
-  delay(800);
-}
+  // Inicializa en modo EEPROM y carga posiciones
+    for (int i = 0; i < maxPositions; i++) {
+    readPosition(i);
+    delay(500);
+  }
 }
 
 void loop() {
   // leer boton
   if (digitalRead(boton) == 0){
-    delay(200);
-    changeMode();
-  }
-  if (mode == 0) {
-    // Modo EEPROM: carga la primera posición predefinida
-    readPosition(0);
-    delay(800);
-    readPosition(1);
-    delay(800);
-    readPosition(2);
-    delay(800);
-    readPosition(3);
-    delay(800);
-    readPosition(4);
-    delay(800);
-    readPosition(5);
-    delay(800);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("EEPROM: ");
+    for (int i = 0; i < maxPositions; i++) {
+      readPosition(i);
+      delay(500);
+    }
   } else {
-
   // Proceso si se elige el potenciómetro
   // Verifica si hay datos disponibles para leer
   if (Serial.available()) {
-  // Lee el mensaje hasta encontrar una coma
-  String data = Serial.readStringUntil('\n');
-  int commaIndex = data.indexOf(',');
-  if (commaIndex > 0) {
-    // guarda una cadena desde la posición 0 hasta la coma y la convierte a un valor entero
-    P_1 = data.substring(0, commaIndex).toInt();
-    // guarda una cadena desde la posición después de la coma hasta el final y la convierte a un valor entero
-    P_2 = data.substring(commaIndex + 1).toInt();
-    // Se colocan los servos en la posición indicada
-    S1.write(P_1);
-    S2.write(P_2);
-    // Se muestra el valor de P_X en la pantalla LCD. 
-    lcd.setCursor(0,0); // Servo 1
-    lcd.print("S1: ")+lcd.print(P_1)+lcd.print(" ");
-    //lcd.setCursor(0,1); // Servo 2
-    lcd.print("S2: ")+lcd.print(P_2)+lcd.print("   ");
-    }
+    // Lee el mensaje hasta encontrar una coma
+    String data = Serial.readStringUntil('\n');
+    int commaIndex = data.indexOf(',');
+    if (commaIndex > 0) {
+      // guarda una cadena desde la posición 0 hasta la coma y la convierte a un valor entero
+      P_1 = data.substring(0, commaIndex).toInt();
+      // guarda una cadena desde la posición después de la coma hasta el final y la convierte a un valor entero
+      P_2 = data.substring(commaIndex + 1).toInt();
+      // Se colocan los servos en la posición indicada
+      S1.write(P_1);
+      S2.write(P_2);
+      // Se muestra el valor de P_X en la pantalla LCD. 
+      lcd.setCursor(0,0); // Servo 1
+      lcd.print("S1: ")+lcd.print(P_1)+lcd.print(" ");
+      //lcd.setCursor(0,1); // Servo 2
+      lcd.print("S2: ")+lcd.print(P_2)+lcd.print("   ");
+      }
     }
   }
   delay(1);
