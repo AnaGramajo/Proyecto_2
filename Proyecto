@@ -19,9 +19,6 @@ Servo S2; // Medio
 #define LCD_LINES   2
 LiquidCrystal_I2C lcd(I2C_ADDR, LCD_COLUMNS, LCD_LINES);
 
-// Posición actual de los servos
-int actual = 0;
-
 // identifica botón
 int boton = 3; 
 
