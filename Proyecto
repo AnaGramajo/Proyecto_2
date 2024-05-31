@@ -155,6 +155,8 @@ void loop() {
 
 // Arduino maestro 
 
+#include <stdint.h> 
+
 const int P1 = A1; // Pin del primer potenciómetro
 const int P2 = A2; // Pin del segundo potenciómetro
 // Se definen las variables que guardan el valor de los potenciómetros
